@@ -6,6 +6,10 @@
 
 AnalogClock::AnalogClock(QWidget *parent)
     : QWidget(parent)
+    , m_colorPattern(0)
+    , m_hourColor(palette().color(QPalette::Text))
+    , m_minuteColor(palette().color(QPalette::Text))
+    , m_secondsColor(palette().color(QPalette::Accent))
 {
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, QOverload<>::of(&AnalogClock::update));
@@ -13,9 +17,40 @@ AnalogClock::AnalogClock(QWidget *parent)
 
     setWindowTitle(tr("Analog Clock"));
     resize(m_startW, m_startH);
+    loadPreference();
 
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     setAttribute(Qt::WA_TranslucentBackground);
+}
+
+void AnalogClock::paintEvent(QPaintEvent *)
+{
+    if (m_isStopwatchMode && m_isRunning) {
+        qint64 ms = m_elapsedTimer.restart();
+        m_stopwatchElapsed = m_stopwatchElapsed.addMSecs(ms);
+    }
+
+    m_currentTime = displayTime();
+
+    int w = width();
+    int h = height();
+    int side = qMin(w, h);
+
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.translate(w / 2, h / 2);
+    painter.scale(side / m_startW, side / m_startH);
+
+    drawSubDial1(painter);
+    drawOuterCircle(painter);
+    drawMinuteMarker(painter);
+    drawDigital(painter);
+    drawDateWeek(painter);
+    drawHourCharacter(painter);
+    drawHourMarker(painter);
+    drawHourHand(painter);
+    drawMinuteHand(painter);
+    drawSecondHand(painter);
 }
 
 void AnalogClock::mousePressEvent(QMouseEvent *event)
@@ -49,15 +84,31 @@ void AnalogClock::mouseDoubleClickEvent(QMouseEvent *event)
 void AnalogClock::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu menu(this);
-    if (m_isStopwatchMode && m_isRunning) {
-        menu.addAction("Stop", this, &AnalogClock::stopStopwatch);
+
+    if (m_isStopwatchMode) {
+        if (m_isRunning) {
+            menu.addAction("Stop", this, &AnalogClock::stopStopwatch);
+        } else {
+            menu.addAction("Start", this, &AnalogClock::startStopwatch);
+        }
+        menu.addAction("Reset", this, &AnalogClock::resetStopwatch);
+        menu.addSeparator();
+        menu.addAction("Return to Clock", this, &AnalogClock::switchToClockMode);
     } else {
-        menu.addAction("Start", this, &AnalogClock::startStopwatch);
+        menu.addAction("Stopwatch Mode", this, &AnalogClock::startStopwatch);
     }
-    menu.addAction("Reset", this, &AnalogClock::resetStopwatch);
+
+    menu.addSeparator();
+    menu.addAction("Light/Dark", this, [this]() { reverseColor(); });
     menu.addSeparator();
     menu.addAction("Quit", qApp, &QCoreApplication::quit);
     menu.exec(event->globalPos());
+}
+
+void AnalogClock::closeEvent(QCloseEvent *event)
+{
+    savePreference();
+    event->accept();
 }
 
 QTime AnalogClock::displayTime() const
@@ -88,39 +139,60 @@ void AnalogClock::stopStopwatch()
 void AnalogClock::resetStopwatch()
 {
     m_isRunning = false;
-    m_isStopwatchMode = false;
     m_stopwatchElapsed = QTime(0, 0);
     update();
 }
 
-void AnalogClock::paintEvent(QPaintEvent *)
+void AnalogClock::switchToClockMode()
 {
-    if (m_isStopwatchMode && m_isRunning) {
-        qint64 ms = m_elapsedTimer.restart();
-        m_stopwatchElapsed = m_stopwatchElapsed.addMSecs(ms);
+    m_isRunning = false;
+    m_isStopwatchMode = false;
+    update();
+}
+
+void AnalogClock::reverseColor(int pattern)
+{
+    if (pattern == -1) {
+        m_colorPattern = (m_colorPattern == 0) ? 1 : 0;
+    } else {
+        m_colorPattern = pattern;
     }
 
-    m_currentTime = displayTime();
+    if (m_colorPattern == 1) {
+        // Light pattern
+        m_hourColor = palette().color(QPalette::Light);
+        m_minuteColor = palette().color(QPalette::Light);
+        m_secondsColor = palette().color(QPalette::Accent);
+    } else {
+        // Dark pattern
+        m_hourColor = palette().color(QPalette::Text);
+        m_minuteColor = palette().color(QPalette::Text);
+        m_secondsColor = palette().color(QPalette::Accent);
+    }
+    update();
+}
 
-    int w = width();
-    int h = height();
-    int side = qMin(w, h);
+void AnalogClock::loadPreference()
+{
+    QSettings settings(OWNER_NAME, APP_NAME);
 
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.translate(w / 2, h / 2);
-    painter.scale(side / m_startW, side / m_startH);
+    if (settings.contains("windowPos")) {
+        move(settings.value("windowPos").toPoint());
+        resize(settings.value("windowSize").toSize());
+    }
 
-    drawSubDial1(painter);
-    drawOuterCircle(painter);
-    drawMinuteMarker(painter);
-    drawDigital(painter);
-    drawDateWeek(painter);
-    drawHourCharacter(painter);
-    drawHourMarker(painter);
-    drawHourHand(painter);
-    drawMinuteHand(painter);
-    drawSecondHand(painter);
+    int savedPattern = settings.value("colorPattern", 0).toInt();
+    reverseColor(savedPattern);
+}
+
+void AnalogClock::savePreference()
+{
+    QSettings settings(OWNER_NAME, APP_NAME);
+
+    settings.setValue("windowPos", pos());
+    settings.setValue("windowSize", size());
+    settings.setValue("colorPattern", m_colorPattern);
+    settings.sync();
 }
 
 void AnalogClock::drawSubDial1(QPainter &painter)
@@ -204,6 +276,57 @@ void AnalogClock::drawOuterCircle(QPainter &painter)
     QPointF center = QPointF(0.0, 0.0);
     int r2 = (m_startH / 2) - 1;
     painter.drawEllipse(center, r2, r2);
+}
+
+void AnalogClock::drawMinuteMarker(QPainter &painter)
+{
+    for (int j = 0; j < 60; ++j) {
+        if (j % 5 == 0)
+            painter.setPen(QPen(m_minuteColor, 2));
+        else
+            painter.setPen(QPen(m_minuteColor, 1));
+        painter.drawLine(92, 0, 98, 0);
+        painter.rotate(6.0);
+    }
+}
+
+void AnalogClock::drawDigital(QPainter &painter)
+{
+    QPainterStateGuard digitalGuard(&painter);
+
+    painter.translate(0, 45);
+    painter.setPen(m_secondsColor);
+
+    QRect digitalRect(-30, -10, 60, 20);
+    QFont digitalFont("Monospace");
+    digitalFont.setPixelSize(12);
+    digitalFont.setBold(true);
+    painter.setFont(digitalFont);
+
+    int second = m_currentTime.second();
+    QString timeText = second % 2 == 0 ? m_currentTime.toString("HH:mm")
+                                       : m_currentTime.toString("HH mm");
+    painter.drawText(digitalRect, Qt::AlignCenter, timeText);
+    // painter.drawRect(digitalRect);
+}
+
+void AnalogClock::drawDateWeek(QPainter &painter)
+{
+    QPainterStateGuard digitalGuard(&painter);
+
+    painter.translate(42, 0);
+    painter.setPen(QPen(m_hourColor, 1));
+    painter.setBrush(QColor(180, 180, 180));
+
+    QRect digitalRect(-20, -10, 40, 18);
+    painter.drawRect(digitalRect);
+    QFont digitalFont("Monospace");
+    digitalFont.setPixelSize(12);
+    digitalFont.setBold(true);
+    painter.setFont(digitalFont);
+
+    QString dateText = QDate::currentDate().toString("dd ddd");
+    painter.drawText(digitalRect, Qt::AlignCenter, dateText);
 }
 
 void AnalogClock::drawHourCharacter(QPainter &painter)
@@ -298,55 +421,4 @@ void AnalogClock::drawSecondHand(QPainter &painter)
     painter.drawConvexPolygon(m_secondsHand, 4);
     painter.drawEllipse(-3, -3, 6, 6);
     painter.drawEllipse(-5, -68, 10, 10);
-}
-
-void AnalogClock::drawMinuteMarker(QPainter &painter)
-{
-    for (int j = 0; j < 60; ++j) {
-        if (j % 5 == 0)
-            painter.setPen(QPen(m_minuteColor, 2));
-        else
-            painter.setPen(QPen(m_minuteColor, 1));
-        painter.drawLine(92, 0, 98, 0);
-        painter.rotate(6.0);
-    }
-}
-
-void AnalogClock::drawDigital(QPainter &painter)
-{
-    QPainterStateGuard digitalGuard(&painter);
-
-    painter.translate(0, 45);
-    painter.setPen(m_secondsColor);
-
-    QRect digitalRect(-30, -10, 60, 20);
-    QFont digitalFont("Monospace");
-    digitalFont.setPixelSize(12);
-    digitalFont.setBold(true);
-    painter.setFont(digitalFont);
-
-    int second = m_currentTime.second();
-    QString timeText = second % 2 == 0 ? m_currentTime.toString("HH:mm")
-                                       : m_currentTime.toString("HH mm");
-    painter.drawText(digitalRect, Qt::AlignCenter, timeText);
-    // painter.drawRect(digitalRect);
-}
-
-void AnalogClock::drawDateWeek(QPainter &painter)
-{
-    QPainterStateGuard digitalGuard(&painter);
-
-    painter.translate(42, 0);
-    painter.setPen(QPen(m_hourColor, 1));
-    painter.setBrush(QColor(180, 180, 180));
-
-    QRect digitalRect(-20, -10, 40, 18);
-    painter.drawRect(digitalRect);
-    QFont digitalFont("Monospace");
-    digitalFont.setPixelSize(12);
-    digitalFont.setBold(true);
-    painter.setFont(digitalFont);
-
-    QString dateText = QDate::currentDate().toString("dd ddd");
-    painter.drawText(digitalRect, Qt::AlignCenter, dateText);
 }

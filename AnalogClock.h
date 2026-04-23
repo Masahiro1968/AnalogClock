@@ -9,9 +9,13 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterStateGuard>
+#include <QSettings>
 #include <QTime>
 #include <QTimer>
 #include <QWidget>
+
+#define OWNER_NAME "Masahiro1968"
+#define APP_NAME "AnalogClock"
 
 class AnalogClock : public QWidget
 {
@@ -21,37 +25,43 @@ public:
     AnalogClock(QWidget *parent = nullptr);
 
 protected:
-    QTime displayTime() const;
-    void stopStopwatch();
-    void startStopwatch();
-    void resetStopwatch();
-
-    void drawSubDial1(QPainter &painter);
-    void drawOuterCircle(QPainter &painter);
-    void drawHourHand(QPainter &painter);
-    void drawHourMarker(QPainter &painter);
-    void drawHourCharacter(QPainter &painter);
-    void drawMinuteHand(QPainter &painter);
-    void drawSecondHand(QPainter &painter);
-    void drawMinuteMarker(QPainter &painter);
-    void drawDigital(QPainter &painter);
-    void drawDateWeek(QPainter &painter);
-
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
+
+    QTime displayTime() const;
+    void startStopwatch();
+    void stopStopwatch();
+    void resetStopwatch();
+    void switchToClockMode();
+    void reverseColor(int pattern = -1);
+    void loadPreference();
+    void savePreference();
+
+    void drawSubDial1(QPainter &painter);
+    void drawOuterCircle(QPainter &painter);
+    void drawMinuteMarker(QPainter &painter);
+    void drawDigital(QPainter &painter);
+    void drawDateWeek(QPainter &painter);
+    void drawHourCharacter(QPainter &painter);
+    void drawHourMarker(QPainter &painter);
+    void drawHourHand(QPainter &painter);
+    void drawMinuteHand(QPainter &painter);
+    void drawSecondHand(QPainter &painter);
 
 private:
     const QPoint m_hourHand[4] = {QPoint(5, 14), QPoint(-5, 14), QPoint(-4, -71), QPoint(4, -71)};
     const QPoint m_minuteHand[4] = {QPoint(4, 14), QPoint(-4, 14), QPoint(-3, -89), QPoint(3, -89)};
     const QPoint m_secondsHand[4] = {QPoint(1, 14), QPoint(-1, 14), QPoint(-1, -89), QPoint(1, -89)};
 
-    const QColor m_hourColor = palette().color(QPalette::Text);
-    const QColor m_minuteColor = palette().color(QPalette::Text);
-    const QColor m_secondsColor = palette().color(QPalette::Accent);
+    QColor m_hourColor;
+    QColor m_minuteColor;
+    QColor m_secondsColor;
+    int m_colorPattern;
 
     const double m_startW = 200.0;
     const double m_startH = 200.0;
