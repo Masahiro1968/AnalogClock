@@ -7,7 +7,11 @@
 
 int main(int argc, char *argv[])
 {
+#ifdef Q_OS_LINUX
+    // Linux(Wayland/X11)環境でのみ、座標取得のためにxcbを強制
     qputenv("QT_QPA_PLATFORM", "xcb");
+#endif
+
     QApplication app(argc, argv);
     AnalogClock clock;
     clock.show();

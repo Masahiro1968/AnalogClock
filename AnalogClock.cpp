@@ -191,7 +191,7 @@ void AnalogClock::savePreference()
 
 void AnalogClock::drawSubDial1(QPainter &painter)
 {
-    QPainterStateGuard subGuard(&painter);
+    painter.save();
 
     // --- Move origin and set scale ---
     painter.translate(36, -36);
@@ -248,20 +248,24 @@ void AnalogClock::drawSubDial1(QPainter &painter)
 
     // --- hour hand ---
     {
-        QPainterStateGuard handGuard(&painter);
+        painter.save();
         painter.setPen(Qt::NoPen);
         painter.setBrush(m_hourColor);
         painter.rotate(30.0 * (currentTime.hour() % 12 + currentTime.minute() / 60.0));
         painter.drawConvexPolygon(m_hourHand, 4);
+        painter.restore();
     }
 
     // ---  minute hand ---
     if (m_isStopwatchMode) {
-        QPainterStateGuard handGuard(&painter);
+        painter.save();
         painter.setPen(QPen(m_minuteColor, 2));
         painter.rotate(6.0 * currentTime.minute());
         painter.drawConvexPolygon(m_minuteHand, 4);
+        painter.restore();
     }
+
+    painter.restore();
 }
 
 void AnalogClock::drawOuterCircle(QPainter &painter)
@@ -286,7 +290,7 @@ void AnalogClock::drawMinuteMarker(QPainter &painter)
 
 void AnalogClock::drawDigital(QPainter &painter)
 {
-    QPainterStateGuard digitalGuard(&painter);
+    painter.save();
 
     painter.translate(0, 45);
     painter.setPen(m_secondsColor);
@@ -302,30 +306,40 @@ void AnalogClock::drawDigital(QPainter &painter)
                                        : m_currentTime.toString("HH mm");
     painter.drawText(digitalRect, Qt::AlignCenter, timeText);
     // painter.drawRect(digitalRect);
+
+    painter.restore();
 }
 
 void AnalogClock::drawDateWeek(QPainter &painter)
 {
-    QPainterStateGuard digitalGuard(&painter);
+    painter.save();
 
-    painter.translate(42, 0);
-    painter.setPen(QPen(m_hourColor, 1));
-    painter.setBrush(QColor(180, 180, 180));
-
-    QRect digitalRect(-20, -10, 40, 18);
-    painter.drawRect(digitalRect);
     QFont digitalFont("Monospace");
-    digitalFont.setPixelSize(12);
+    digitalFont.setPixelSize(11);
     digitalFont.setBold(true);
     painter.setFont(digitalFont);
 
     QString dateText = QDate::currentDate().toString("dd ddd");
+    int textWidth = painter.fontMetrics().horizontalAdvance(dateText);
+    int textHeight = 18;
+
+    painter.translate(38, 0);
+
+    painter.setPen(QPen(m_hourColor, 1));
+    painter.setBrush(QColor(180, 180, 180, 200));
+
+    QRect digitalRect(-(textWidth / 2 + 3), -(textHeight / 2), textWidth + 6, textHeight);
+    painter.drawRect(digitalRect);
+
+    painter.setPen(m_hourColor);
     painter.drawText(digitalRect, Qt::AlignCenter, dateText);
+
+    painter.restore();
 }
 
 void AnalogClock::drawHourCharacter(QPainter &painter)
 {
-    QPainterStateGuard numGuard(&painter);
+    painter.save();
 
     painter.setPen(m_hourColor);
     painter.setFont(QFont("Arial", 10, QFont::Bold));
@@ -352,6 +366,8 @@ void AnalogClock::drawHourCharacter(QPainter &painter)
     // painter.drawRect(rect12);
     // painter.drawRect(rect18);
     // painter.drawRect(rect06);
+
+    painter.restore();
 }
 
 void AnalogClock::drawHourMarker(QPainter &painter)
@@ -374,7 +390,7 @@ void AnalogClock::drawHourMarker(QPainter &painter)
 
 void AnalogClock::drawHourHand(QPainter &painter)
 {
-    QPainterStateGuard guard(&painter);
+    painter.save();
 
     painter.setPen(QPen(m_hourColor, 2));
     painter.setBrush(Qt::NoBrush);
@@ -391,22 +407,26 @@ void AnalogClock::drawHourHand(QPainter &painter)
         painter.rotate(15.0 * preciseHours);
         painter.drawConvexPolygon(m_hourHand, 4);
     }
+
+    painter.restore();
 }
 
 void AnalogClock::drawMinuteHand(QPainter &painter)
 {
-    QPainterStateGuard guard(&painter);
+    painter.save();
 
     painter.setPen(QPen(m_minuteColor, 2));
     painter.setBrush(Qt::NoBrush);
     double preciseMinutes = m_currentTime.minute() + (m_currentTime.second() / 60.0);
     painter.rotate(6.0 * preciseMinutes);
     painter.drawConvexPolygon(m_minuteHand, 4);
+
+    painter.restore();
 }
 
 void AnalogClock::drawSecondHand(QPainter &painter)
 {
-    QPainterStateGuard guard(&painter);
+    painter.save();
 
     painter.setPen(Qt::NoPen);
     painter.setBrush(m_secondsColor);
@@ -415,4 +435,6 @@ void AnalogClock::drawSecondHand(QPainter &painter)
     painter.drawConvexPolygon(m_secondsHand, 4);
     painter.drawEllipse(-3, -3, 6, 6);
     painter.drawEllipse(-5, -68, 10, 10);
+
+    painter.restore();
 }
