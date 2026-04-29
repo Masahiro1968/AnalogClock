@@ -56,16 +56,10 @@ void AnalogClock::paintEvent(QPaintEvent *)
 void AnalogClock::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        m_dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
-        event->accept();
-    }
-}
-
-void AnalogClock::mouseMoveEvent(QMouseEvent *event)
-{
-    if (event->buttons() & Qt::LeftButton) {
-        move(event->globalPosition().toPoint() - m_dragPosition);
-        event->accept();
+        if (auto handle = windowHandle()) {
+            handle->startSystemMove();
+            event->accept();
+        }
     }
 }
 

@@ -13,6 +13,7 @@
 #include <QTime>
 #include <QTimer>
 #include <QWidget>
+#include <QWindow>
 
 #define OWNER_NAME "Masahiro1968"
 #define APP_NAME "AnalogClock"
@@ -27,7 +28,6 @@ public:
 protected:
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
