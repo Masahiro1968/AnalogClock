@@ -69,6 +69,9 @@ Confirmed working on Ubuntu 26.04.
 
 Confirmed working on Windows 11.
 
+> If you run `AnalogClock.exe` on a freshly installed Windows 11 environment, a dialog box may appear stating that `vcruntime140.dll` (or similar) is missing. You can resolve this by installing the missing libraries via **VC_redist.x64.exe**.
+> You can download it from the official Microsoft link (e.g., [https://aka.ms/vc14/vc_redist.x64.exe](https://aka.ms/vc14/vc_redist.x64.exe)).
+
 The source code itself is almost entirely shared with the Linux version (thanks to Qt).
 
 ![Windows11](doc/ScreenShot_Windows11.png)

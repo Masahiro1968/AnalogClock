@@ -69,6 +69,9 @@ Ubuntu 26.04で動くことを確認しました。
 
 Windows11で動くことを確認しました。
 
+>AnalogClock.exeを実行する環境が、Windows11のインストール直後の場合、このvcruntime140.dllがないというダイアログが表示されます。VC_redist.x64.exeをインストールして不足するライブラリをインストールすることで動きます。<br>
+Microsoft の公式リンク（例: [https://aka.ms/vc14/vc_redist.x64.exe](https://aka.ms/vc14/vc_redist.x64.exe)）から取得します。
+
 ソースコード自体は、Linuxとほぼ共有です(Qtですので)。
 
 ![Windows11](doc/ScreenShot_Windows11.png)
