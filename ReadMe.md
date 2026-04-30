@@ -25,7 +25,7 @@ The main dial serves as both a 24-hour clock and a high-precision stopwatch. The
 
 ## Technical Details
 
-* **Framework**: Qt 6.10+
+* **Framework**: Qt 6.11 (Linux), Qt 6.8 (Windows)
 * **Graphics**: Antialiased QPainter with `WA_TranslucentBackground`.
 * **Timing**: Precision tracking using `QElapsedTimer` for the stopwatch logic.
 
