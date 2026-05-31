@@ -10,6 +10,14 @@ AnalogClock::AnalogClock(QWidget *parent)
     , m_hourColor(palette().color(QPalette::Text))
     , m_minuteColor(palette().color(QPalette::Text))
     , m_secondsColor(palette().color(QPalette::Accent))
+    , m_hourHandOnly(false)
+    , m_showMinuteMarkers(true)
+    , m_showHourMarkers(true)
+    , m_showHourNumbers(true)
+    , m_showOuterCircle(true)
+    , m_showSubDial(true)
+    , m_showDigital(true)
+    , m_showDate(true)
 {
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, QOverload<>::of(&AnalogClock::update));
@@ -41,16 +49,33 @@ void AnalogClock::paintEvent(QPaintEvent *)
     painter.translate(w / 2, h / 2);
     painter.scale(side / m_startW, side / m_startH);
 
-    drawSubDial1(painter);
-    drawOuterCircle(painter);
-    drawMinuteMarker(painter);
-    drawDigital(painter);
-    drawDateWeek(painter);
-    drawHourCharacter(painter);
-    drawHourMarker(painter);
+    if (m_showSubDial)
+        drawSubDial1(painter);
+
+    if (m_showOuterCircle)
+        drawOuterCircle(painter);
+
+    if (m_showMinuteMarkers)
+        drawMinuteMarker(painter);
+
+    if (m_showHourMarkers)
+        drawHourMarker(painter);
+
+    if (m_showDigital)
+        drawDigital(painter);
+
+    if (m_showDate)
+        drawDateWeek(painter);
+
+    if (m_showHourNumbers)
+        drawHourCharacter(painter);
+
     drawHourHand(painter);
-    drawMinuteHand(painter);
-    drawSecondHand(painter);
+
+    if (!m_hourHandOnly) {
+        drawMinuteHand(painter);
+        drawSecondHand(painter);
+    }
 }
 
 void AnalogClock::mousePressEvent(QMouseEvent *event)
@@ -72,7 +97,7 @@ void AnalogClock::wheelEvent(QWheelEvent *event)
 
 void AnalogClock::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    // future implement.
+    event->accept();
 }
 
 void AnalogClock::contextMenuEvent(QContextMenuEvent *event)
@@ -93,7 +118,68 @@ void AnalogClock::contextMenuEvent(QContextMenuEvent *event)
     }
 
     menu.addSeparator();
-    menu.addAction("Light/Dark", this, [this]() { reverseColor(); });
+
+    // ★ オプションを細かく管理できるサブメニューを定義
+    QMenu *optionsMenu = menu.addMenu("Customization Options");
+
+    QAction *actHourOnly = optionsMenu->addAction("短針のみ表示 (Hour Hand Only)", this, [this]() {
+        m_hourHandOnly = !m_hourHandOnly;
+        update();
+    });
+    actHourOnly->setCheckable(true);
+    actHourOnly->setChecked(m_hourHandOnly);
+
+    QAction *actMinMarkers = optionsMenu->addAction("分目盛り表示 (Minute Ticks)", this, [this]() {
+        m_showMinuteMarkers = !m_showMinuteMarkers;
+        update();
+    });
+    actMinMarkers->setCheckable(true);
+    actMinMarkers->setChecked(m_showMinuteMarkers);
+
+    QAction *actHourMarkers = optionsMenu->addAction("時目盛り表示 (Hour Markers)", this, [this]() {
+        m_showHourMarkers = !m_showHourMarkers;
+        update();
+    });
+    actHourMarkers->setCheckable(true);
+    actHourMarkers->setChecked(m_showHourMarkers);
+
+    QAction *actHourNumbers = optionsMenu->addAction("数字表示 (Hour Numbers)", this, [this]() {
+        m_showHourNumbers = !m_showHourNumbers;
+        update();
+    });
+    actHourNumbers->setCheckable(true);
+    actHourNumbers->setChecked(m_showHourNumbers);
+
+    QAction *actOuterCircle = optionsMenu->addAction("外周枠表示 (Outer Border)", this, [this]() {
+        m_showOuterCircle = !m_showOuterCircle;
+        update();
+    });
+    actOuterCircle->setCheckable(true);
+    actOuterCircle->setChecked(m_showOuterCircle);
+
+    QAction *actSubdial = optionsMenu->addAction("サブダイヤル表示 (Subdial)", this, [this]() {
+        m_showSubDial = !m_showSubDial;
+        update();
+    });
+    actSubdial->setCheckable(true);
+    actSubdial->setChecked(m_showSubDial);
+
+    QAction *actDigital = optionsMenu->addAction("デジタル時刻表示 (Digital Panel)", this, [this]() {
+        m_showDigital = !m_showDigital;
+        update();
+    });
+    actDigital->setCheckable(true);
+    actDigital->setChecked(m_showDigital);
+
+    QAction *actDate = optionsMenu->addAction("日付表示 (Date Display)", this, [this]() {
+        m_showDate = !m_showDate;
+        update();
+    });
+    actDate->setCheckable(true);
+    actDate->setChecked(m_showDate);
+
+    menu.addSeparator();
+    menu.addAction("Light/Dark Mode", this, [this]() { reverseColor(); });
     menu.addSeparator();
     menu.addAction("Quit", qApp, &QCoreApplication::quit);
     menu.exec(event->globalPos());
@@ -153,12 +239,12 @@ void AnalogClock::reverseColor(int pattern)
     }
 
     if (m_colorPattern == 1) {
-        // Light pattern
+        // Light theme
         m_hourColor = palette().color(QPalette::Light);
         m_minuteColor = palette().color(QPalette::Light);
         m_secondsColor = palette().color(QPalette::Accent);
     } else {
-        // Dark pattern
+        // Dark theme
         m_hourColor = palette().color(QPalette::Text);
         m_minuteColor = palette().color(QPalette::Text);
         m_secondsColor = palette().color(QPalette::Accent);
@@ -168,7 +254,7 @@ void AnalogClock::reverseColor(int pattern)
 
 void AnalogClock::loadPreference()
 {
-    QSettings settings(OWNER_NAME, APP_NAME);
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, OWNER_NAME, APP_NAME);
 
     if (settings.contains("windowPos")) {
         move(settings.value("windowPos").toPoint());
@@ -177,15 +263,36 @@ void AnalogClock::loadPreference()
 
     int savedPattern = settings.value("colorPattern", 0).toInt();
     reverseColor(savedPattern);
+
+    // ★ オプション値の読み込み (デフォルト設定を考慮してフォールバックを用意)
+    m_hourHandOnly      = settings.value("hourHandOnly", false).toBool();
+    m_showMinuteMarkers = settings.value("showMinuteMarkers", true).toBool();
+    m_showHourMarkers   = settings.value("showHourMarkers", true).toBool();
+    m_showHourNumbers   = settings.value("showHourNumbers", true).toBool();
+    m_showOuterCircle   = settings.value("showOuterCircle", true).toBool();
+    m_showSubDial       = settings.value("showSubDial", true).toBool();
+    m_showDigital       = settings.value("showDigital", true).toBool();
+    m_showDate          = settings.value("showDate", true).toBool();
 }
 
 void AnalogClock::savePreference()
 {
-    QSettings settings(OWNER_NAME, APP_NAME);
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, OWNER_NAME, APP_NAME);
 
     settings.setValue("windowPos", pos());
     settings.setValue("windowSize", size());
     settings.setValue("colorPattern", m_colorPattern);
+
+    // ★ オプション値の永続化
+    settings.setValue("hourHandOnly", m_hourHandOnly);
+    settings.setValue("showMinuteMarkers", m_showMinuteMarkers);
+    settings.setValue("showHourMarkers", m_showHourMarkers);
+    settings.setValue("showHourNumbers", m_showHourNumbers);
+    settings.setValue("showOuterCircle", m_showOuterCircle);
+    settings.setValue("showSubDial", m_showSubDial);
+    settings.setValue("showDigital", m_showDigital);
+    settings.setValue("showDate", m_showDate);
+
     settings.sync();
 }
 
@@ -193,23 +300,19 @@ void AnalogClock::drawSubDial1(QPainter &painter)
 {
     painter.save();
 
-    // --- Move origin and set scale ---
     painter.translate(36, -36);
     painter.scale(0.25, 0.25);
 
-    // --- outer circle ---
     painter.setPen(QPen(m_minuteColor, 2));
     painter.setBrush(Qt::NoBrush);
     QPointF center = QPointF(0.0, 0.0);
     int r1 = (m_startH / 2) - 2;
     painter.drawEllipse(center, r1, r1);
 
-    // --- outer circle shadow ---
     painter.setPen(QPen(QColor(180, 180, 180), 2));
     int r2 = (m_startH / 2) - 3;
     painter.drawEllipse(center, r2, r2);
 
-    // --- subdial's number ---
     int w = 40;
     int h = 40;
     painter.setPen(m_minuteColor);
@@ -227,15 +330,6 @@ void AnalogClock::drawSubDial1(QPainter &painter)
     QRect rect09(-84, -20, w, h);
     painter.drawText(rect09, Qt::AlignCenter, "09");
 
-    // --- debug ---
-    // painter.setPen(QPen(m_minuteColor, 1, Qt::DashLine));
-    // painter.setBrush(Qt::NoBrush);
-    // painter.drawRect(rect12);
-    // painter.drawRect(rect06);
-    // painter.drawRect(rect03);
-    // painter.drawRect(rect09);
-
-    // --- scale ---
     painter.setPen(Qt::NoPen);
     painter.setBrush(m_minuteColor);
     for (int i = 0; i < 12; ++i) {
@@ -243,10 +337,8 @@ void AnalogClock::drawSubDial1(QPainter &painter)
         painter.rotate(30.0);
     }
 
-    // Subdial#1 always shows current time.
     QTime currentTime = QTime::currentTime();
 
-    // --- hour hand ---
     {
         painter.save();
         painter.setPen(Qt::NoPen);
@@ -256,8 +348,7 @@ void AnalogClock::drawSubDial1(QPainter &painter)
         painter.restore();
     }
 
-    // ---  minute hand ---
-    if (m_isStopwatchMode) {
+    {
         painter.save();
         painter.setPen(QPen(m_minuteColor, 2));
         painter.rotate(6.0 * currentTime.minute());
@@ -270,14 +361,17 @@ void AnalogClock::drawSubDial1(QPainter &painter)
 
 void AnalogClock::drawOuterCircle(QPainter &painter)
 {
+    painter.save();
     painter.setPen(QPen(m_hourColor, 1));
     QPointF center = QPointF(0.0, 0.0);
     int r2 = (m_startH / 2) - 1;
     painter.drawEllipse(center, r2, r2);
+    painter.restore();
 }
 
 void AnalogClock::drawMinuteMarker(QPainter &painter)
 {
+    painter.save();
     for (int j = 0; j < 60; ++j) {
         if (j % 5 == 0)
             painter.setPen(QPen(m_minuteColor, 2));
@@ -286,6 +380,7 @@ void AnalogClock::drawMinuteMarker(QPainter &painter)
         painter.drawLine(92, 0, 98, 0);
         painter.rotate(6.0);
     }
+    painter.restore();
 }
 
 void AnalogClock::drawDigital(QPainter &painter)
@@ -305,7 +400,6 @@ void AnalogClock::drawDigital(QPainter &painter)
     QString timeText = second % 2 == 0 ? m_currentTime.toString("HH:mm")
                                        : m_currentTime.toString("HH mm");
     painter.drawText(digitalRect, Qt::AlignCenter, timeText);
-    // painter.drawRect(digitalRect);
 
     painter.restore();
 }
@@ -359,19 +453,12 @@ void AnalogClock::drawHourCharacter(QPainter &painter)
     QRect rect06 = QRect(-82, -11, w, h);
     painter.drawText(rect06, Qt::AlignCenter, m_isStopwatchMode ? "45" : "06");
 
-    // --- debug ---
-    // painter.setPen(QPen(m_hourColor, 1, Qt::DashLine));
-    // painter.setBrush(Qt::NoBrush);
-    // painter.drawRect(rect00);
-    // painter.drawRect(rect12);
-    // painter.drawRect(rect18);
-    // painter.drawRect(rect06);
-
     painter.restore();
 }
 
 void AnalogClock::drawHourMarker(QPainter &painter)
 {
+    painter.save();
     painter.setPen(Qt::NoPen);
     painter.setBrush(m_hourColor);
 
@@ -386,6 +473,7 @@ void AnalogClock::drawHourMarker(QPainter &painter)
             painter.rotate(15.0);
         }
     }
+    painter.restore();
 }
 
 void AnalogClock::drawHourHand(QPainter &painter)

@@ -6,13 +6,16 @@
 
 #include <QElapsedTimer>
 #include <QMenu>
+#include <QAction>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QSettings>
 #include <QTime>
+#include <QDate>
 #include <QTimer>
 #include <QWidget>
 #include <QWindow>
+#include <QApplication>
 
 #define OWNER_NAME "Masahiro1968"
 #define APP_NAME "AnalogClock"
@@ -38,6 +41,7 @@ protected:
     void resetStopwatch();
     void switchToClockMode();
     void reverseColor(int pattern = -1);
+    
     void loadPreference();
     void savePreference();
 
@@ -69,6 +73,16 @@ private:
     QTime m_currentTime;
     QTime m_stopwatchElapsed;
     QElapsedTimer m_elapsedTimer;
+    
     bool m_isStopwatchMode = false;
     bool m_isRunning = false;
+
+    bool m_hourHandOnly = false;         // 短針のみ表示 (長針・秒針を隠すミニマルモード)
+    bool m_showMinuteMarkers = true;     // 分目盛り (60周) の描画有無
+    bool m_showHourMarkers = true;       // 時目盛り (24箇所のバー) の描画有無
+    bool m_showHourNumbers = true;       // 「00」「12」「18」「06」の四方数字の描画有無
+    bool m_showOuterCircle = true;       // 最外周のスリム枠線の描画有無
+    bool m_showSubDial = true;           // ミニ12時間サブダイヤルの描画有無
+    bool m_showDigital = true;           // 下部デジタル表記の描画有無
+    bool m_showDate = true;              // 右側の日付表示枠の描画有無
 };
