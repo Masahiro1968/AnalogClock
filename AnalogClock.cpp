@@ -46,6 +46,7 @@ void AnalogClock::paintEvent(QPaintEvent *)
 
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
+    painter.fillRect(rect(), QColor(0, 0, 0, 1));
     painter.translate(w / 2, h / 2);
     painter.scale(side / m_startW, side / m_startH);
 
@@ -284,7 +285,11 @@ void AnalogClock::changeColor(int pattern)
 
 void AnalogClock::loadPreference()
 {
+#ifdef Q_OS_LINUX
+    QSettings settings(OWNER_NAME, APP_NAME);
+#else
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, OWNER_NAME, APP_NAME);
+#endif
 
     if (settings.contains("windowPos")) {
         move(settings.value("windowPos").toPoint());
@@ -307,7 +312,11 @@ void AnalogClock::loadPreference()
 
 void AnalogClock::savePreference()
 {
+#ifdef Q_OS_LINUX
+    QSettings settings(OWNER_NAME, APP_NAME);
+#else
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, OWNER_NAME, APP_NAME);
+#endif
 
     settings.setValue("windowPos", pos());
     settings.setValue("windowSize", size());
