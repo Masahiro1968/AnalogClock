@@ -40,18 +40,18 @@ protected:
     void stopStopwatch();
     void resetStopwatch();
     void switchToClockMode();
-    void reverseColor(int pattern = -1);
-    
+    void changeColor(int pattern = -1);
+
     void loadPreference();
     void savePreference();
 
     void drawSubDial1(QPainter &painter);
-    void drawOuterCircle(QPainter &painter);
-    void drawMinuteMarker(QPainter &painter);
+    void drawOuterCircle(QPainter &painter, int radius);
+    void drawMinuteMarker(QPainter &painter, int radius);
     void drawDigital(QPainter &painter);
     void drawDateWeek(QPainter &painter);
-    void drawHourCharacter(QPainter &painter);
-    void drawHourMarker(QPainter &painter);
+    void drawHourCharacter(QPainter &painter, int radius);
+    void drawHourMarker(QPainter &painter, int radius);
     void drawHourHand(QPainter &painter);
     void drawMinuteHand(QPainter &painter);
     void drawSecondHand(QPainter &painter);
