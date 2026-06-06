@@ -1,15 +1,16 @@
-# Runnging Images
+# Running Images
 
-これらの動作確認は、**v0.2.0**のバイナリを`Hyper-V`環境下で実行したものです。
+これらの動作確認は、**v0.3.0**のバイナリを`Hyper-V`環境下で確認したものです。<br>
+(キャプチャはv0.2.0の時のものになります。)
 
 各OSのインストール直後の状態で実施しています。OSによっては移動時の動作がカクつくことがあるかもしれません。時計の針の動き自体は問題ないと思われます。また、ストップウォッチの機能も問題ありませんでした。
 
-白黒反転機能も大丈夫でした。
+描画色の手動反転機能（Invert Color）も問題なく動作しました。
 
 >Lubuntuだけは、背景透過ができません。Lubuntuの高速描画の方向性と、この時計の背景透過機能が相いれないものと思いますので、ここは断念しています。
 
 - Hyper-V設定は、すべて以下となります。
-  - 4Core
+  - 4 Cores
   - 4GB Memory
   - 60GB Disk (virtual)
 
@@ -69,6 +70,10 @@ Ubuntu 26.04で動くことを確認しました。
 
 Windows11で動くことを確認しました。
 
-ソースコード自体は、Linuxとほぼ共有です(Qtですので)。
+>AnalogClock.exeを実行する環境が、Windows11のインストール直後の場合、このvcruntime140.dllがないというダイアログが表示されます。VC_redist.x64.exeをインストールして不足するライブラリをインストールすることで動きます。<br>
+Microsoft の公式リンク（例: [https://aka.ms/vc14/vc_redist.x64.exe](https://aka.ms/vc14/vc_redist.x64.exe)）から取得します。
+
+ソースコード自体は、Linuxとほぼ共有です(Qtですので)。<br>
+(今回からWindows/LinuxのどちらもQt6.11になりました。)
 
 ![Windows11](doc/ScreenShot_Windows11.png)

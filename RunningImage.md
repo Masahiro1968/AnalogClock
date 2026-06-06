@@ -1,10 +1,11 @@
 # Running Images
 
-These operation checks were performed by executing the **v0.2.0** binary under a `Hyper-V` environment.
+These operation checks were performed by executing the **v0.3.0** binary under a `Hyper-V` environment.<br>
+(Screenshots are from v0.2.0.)
 
 Testing was conducted on freshly installed OS environments. Depending on the OS, there may be some stuttering during window movement. The movement of the clock hands appears to be fine, and the stopwatch functionality worked without issues.
 
-The light/dark mode reversal feature also functioned correctly.
+The manual color inversion feature (Invert Color) also functioned correctly.
 
 > Lubuntu is the only exception where background transparency does not work. Since the direction of Lubuntu's high-speed rendering and the clock's background transparency seem incompatible, I have decided to forgo support for it there.
 
@@ -69,6 +70,9 @@ Confirmed working on Ubuntu 26.04.
 
 Confirmed working on Windows 11.
 
-The source code itself is almost entirely shared with the Linux version (thanks to Qt).
+> If you run `AnalogClock.exe` on a freshly installed Windows 11 environment, a dialog box may appear stating that `vcruntime140.dll` (or similar) is missing. You can resolve this by installing the missing libraries via **VC_redist.x64.exe**.
+> You can download it from the official Microsoft link (e.g., [https://aka.ms/vc14/vc_redist.x64.exe](https://aka.ms/vc14/vc_redist.x64.exe)).
+
+The source code itself is almost entirely shared with the Linux version, thanks to Qt (and both platforms have been updated to Qt 6.11 as of this release).
 
 ![Windows11](doc/ScreenShot_Windows11.png)
